@@ -2,49 +2,218 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
-import { SITE_TITLE, SITE_DESCRIPTION } from '../consts';
+import AdSense from '../components/AdSense.astro';
+import { SITE_TITLE, SITE_DESCRIPTION, CATEGORIES } from '../consts';
+import { getRecipes, getSettings } from '../lib/db';
+
+export const prerender = false;
+
+const db = (Astro.locals as any)?.runtime?.env?.DB;
+const recipes = await getRecipes(db);
+const settings = await getSettings(db);
+
+const featuredRecipe = recipes.find(r => r.featured) || recipes[0];
+const recentRecipes = recipes.filter(r => r.id !== featuredRecipe?.id).slice(0, 6);
 ---
 
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="es">
 	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
+		<BaseHead title={settings.site_title || SITE_TITLE} description={settings.site_description || SITE_DESCRIPTION} />
 	</head>
-	<body>
+	<body class="bg-surface text-on-surface">
 		<Header />
+		
 		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This
-				template serves as a lightweight, minimally-styled starting point for anyone looking to build
-				a personal website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to <a href="https://docs.astro.build/"
-					>read the docs
-				</a> or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out <a
-					href="https://github.com/Charca/astro-blog-template"
-					>astro-blog-template
-				</a> by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
+			<!-- Hero Section: Featured Recipe -->
+			{featuredRecipe && (
+				<section class="w-full px-4 md:px-10 max-w-[1120px] mx-auto my-8">
+					<div class="relative group overflow-hidden rounded-xl aspect-[16/10] md:aspect-[21/9] shadow-lg border border-outline-variant">
+						<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent z-10"></div>
+						<img 
+							class="w-full h-full object-cover image-zoom" 
+							src={featuredRecipe.heroImage} 
+							alt={featuredRecipe.title} 
+						/>
+						<div class="absolute bottom-0 left-0 p-6 md:p-12 z-20 max-w-3xl text-white">
+							<span class="badge-terracotta mb-4 uppercase tracking-wider">
+								Receta Destacada del Día
+							</span>
+							<h1 class="font-serif text-3xl md:text-5xl font-bold mb-3 text-white leading-tight">
+								{featuredRecipe.title}
+							</h1>
+							<p class="font-sans text-sm md:text-base mb-6 opacity-90 hidden md:block max-w-2xl line-clamp-2">
+								{featuredRecipe.description}
+							</p>
+							
+							<div class="flex flex-wrap items-center gap-4 text-xs font-semibold uppercase tracking-wider mb-6 text-amber-200">
+								<span class="flex items-center gap-1">
+									<span class="material-symbols-outlined text-base">schedule</span>
+									{featuredRecipe.prepTime} prep | {featuredRecipe.cookTime} cocción
+								</span>
+								<span>•</span>
+								<span class="flex items-center gap-1">
+									<span class="material-symbols-outlined text-base">restaurant</span>
+									{featuredRecipe.servings} raciones
+								</span>
+								<span>•</span>
+								<span class="flex items-center gap-1">
+									<span class="material-symbols-outlined text-base">local_fire_department</span>
+									Dificultad {featuredRecipe.difficulty}
+								</span>
+							</div>
+
+							<a 
+								class="btn-primary py-3.5 px-8 text-xs font-bold" 
+								href={`/recetas/${featuredRecipe.slug}`}
+							>
+								VER RECETA COMPLETA
+								<span class="material-symbols-outlined text-base">arrow_forward</span>
+							</a>
+						</div>
+					</div>
+				</section>
+			)}
+
+			<!-- Top AdSense Banner -->
+			<div class="max-w-[1120px] mx-auto px-4 md:px-10">
+				<AdSense slotId="header-home-banner" publisherId={settings.adsense_pub_id} />
+			</div>
+
+			<!-- Popular Categories -->
+			<section class="w-full px-4 md:px-10 max-w-[1120px] mx-auto my-14">
+				<div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4 border-b border-outline-variant pb-4">
+					<div>
+						<span class="text-xs font-semibold text-primary uppercase tracking-widest block mb-1">Gastronomía Ibérica</span>
+						<h2 class="font-serif text-3xl font-bold text-on-surface">Categorías Populares</h2>
+					</div>
+					<a class="text-xs font-semibold text-primary uppercase tracking-wider hover:underline flex items-center gap-1" href="/categorias">
+						Ver todas las categorías
+						<span class="material-symbols-outlined text-sm">chevron_right</span>
+					</a>
+				</div>
+
+				<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+					{CATEGORIES.map((cat) => (
+						<a 
+							href={`/recetas?category=${cat.id}`}
+							class="group relative h-48 overflow-hidden rounded-lg shadow-sm border border-outline-variant flex flex-col justify-end p-5 text-white transition-all hover:shadow-md"
+						>
+							<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20 group-hover:scale-105 transition-transform duration-500 z-10"></div>
+							<img 
+								src={
+									cat.id === "tapas" ? "https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?auto=format&fit=crop&w=600&q=80" :
+									cat.id === "principales" ? "https://images.unsplash.com/photo-1534080564583-6be75777b70a?auto=format&fit=crop&w=600&q=80" :
+									cat.id === "sopas" ? "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80" :
+									"https://images.unsplash.com/photo-1624353365286-3f8d62daad51?auto=format&fit=crop&w=600&q=80"
+								}
+								alt={cat.name}
+								class="absolute inset-0 w-full h-full object-cover z-0"
+							/>
+							<div class="relative z-20">
+								<h3 class="font-serif text-xl font-bold text-white mb-1">{cat.name}</h3>
+								<p class="text-[11px] text-gray-200 line-clamp-1 font-sans">{cat.description}</p>
+							</div>
+						</a>
+					))}
+				</div>
+			</section>
+
+			<!-- Recent Recipes Grid -->
+			<section class="w-full px-4 md:px-10 max-w-[1120px] mx-auto my-14">
+				<div class="flex justify-between items-end mb-8 border-b border-outline-variant pb-4">
+					<div>
+						<span class="text-xs font-semibold text-secondary uppercase tracking-widest block mb-1">Sabores de España</span>
+						<h2 class="font-serif text-3xl font-bold text-on-surface">Últimas Recetas Publicadas</h2>
+					</div>
+					<a class="btn-secondary py-2 px-4 text-xs" href="/recetas">
+						Explorar Recetario
+					</a>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+					{recentRecipes.map((recipe) => (
+						<article class="recipe-card-hover bg-surface-container rounded-xl overflow-hidden border border-outline-variant/60 flex flex-col h-full">
+							<a href={`/recetas/${recipe.slug}`} class="relative overflow-hidden aspect-[4/3] block">
+								<img 
+									src={recipe.heroImage} 
+									alt={recipe.title} 
+									class="w-full h-full object-cover image-zoom"
+								/>
+								<span class="absolute top-3 left-3 badge-terracotta text-[10px]">
+									{recipe.categoryLabel}
+								</span>
+							</a>
+
+							<div class="p-6 flex flex-col justify-between flex-grow">
+								<div>
+									<div class="flex items-center gap-3 text-[11px] font-semibold text-on-surface-variant uppercase tracking-wider mb-2">
+										<span class="flex items-center gap-1 text-secondary">
+											<span class="material-symbols-outlined text-sm">schedule</span>
+											{recipe.prepTime}
+										</span>
+										<span>•</span>
+										<span class="text-primary font-medium">Dificultad {recipe.difficulty}</span>
+									</div>
+
+									<h3 class="font-serif text-xl font-bold text-on-surface mb-3 line-clamp-2 hover:text-primary transition-colors">
+										<a href={`/recetas/${recipe.slug}`}>{recipe.title}</a>
+									</h3>
+
+									<p class="text-xs text-on-surface-variant line-clamp-3 mb-6 leading-relaxed">
+										{recipe.description}
+									</p>
+								</div>
+
+								<div class="pt-4 border-t border-outline-variant flex items-center justify-between">
+									<span class="text-xs font-semibold text-on-surface-variant flex items-center gap-1">
+										<span class="material-symbols-outlined text-sm">group</span>
+										{recipe.servings} raciones
+									</span>
+									<a 
+										href={`/recetas/${recipe.slug}`}
+										class="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1 hover:text-primary-hover"
+									>
+										Ver Receta
+										<span class="material-symbols-outlined text-sm">arrow_forward</span>
+									</a>
+								</div>
+							</div>
+						</article>
+					))}
+				</div>
+			</section>
+
+			<!-- Newsletter Callout Banner -->
+			<section class="w-full px-4 md:px-10 max-w-[1120px] mx-auto my-16">
+				<div class="bg-surface-container-high rounded-2xl p-8 md:p-14 border border-outline-variant text-center relative overflow-hidden">
+					<div class="max-w-2xl mx-auto relative z-10">
+						<span class="w-12 h-12 rounded-full bg-secondary-container text-secondary mx-auto flex items-center justify-center mb-4">
+							<span class="material-symbols-outlined text-2xl">menu_book</span>
+						</span>
+						<h2 class="font-serif text-3xl md:text-4xl font-bold text-on-surface mb-3">
+							Aprende el Arte de la Cocina Tradicional
+						</h2>
+						<p class="text-sm text-on-surface-variant mb-8 leading-relaxed">
+							Recibe consejos semanales, secretos de los grandes chefs de pueblo e ingredientes de temporada directos a tu bandeja de entrada.
+						</p>
+
+						<form class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onsubmit="event.preventDefault(); alert('¡Inscripción confirmada!');">
+							<input 
+								type="email" 
+								placeholder="Escribe tu correo electrónico..."
+								required
+								class="flex-grow bg-surface text-xs text-on-surface px-4 py-3 rounded border border-outline-variant focus:outline-none focus:border-primary"
+							/>
+							<button type="submit" class="btn-primary py-3 px-6 text-xs whitespace-nowrap">
+								¡Unirme gratis!
+							</button>
+						</form>
+					</div>
+				</div>
+			</section>
 		</main>
+
 		<Footer />
 	</body>
 </html>

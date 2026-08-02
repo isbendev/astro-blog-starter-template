@@ -1,0 +1,490 @@
+---
+import BaseHead from '../../components/BaseHead.astro';
+import Header from '../../components/Header.astro';
+import Footer from '../../components/Footer.astro';
+import { SITE_BRAND, CATEGORIES } from '../../consts';
+import { getRecipes, getComments, getSettings } from '../../lib/db';
+
+export const prerender = false;
+
+const db = (Astro.locals as any)?.runtime?.env?.DB;
+const recipes = await getRecipes(db);
+const comments = await getComments(undefined, db, true);
+const settings = await getSettings(db);
+
+const approvedComments = comments.filter(c => c.status === 'approved');
+const pendingComments = comments.filter(c => c.status === 'pending');
+---
+
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<BaseHead 
+			title={`Panel Dashboard Admin | ${SITE_BRAND}`} 
+			description="Panel de administración de recetas, moderación de comentarios y configuración de Google AdSense." 
+		/>
+	</head>
+	<body class="bg-surface text-on-surface">
+		<Header />
+		
+		<main class="max-w-[1120px] mx-auto px-4 md:px-10 py-10">
+			<!-- Dashboard Title Bar -->
+			<div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b border-outline-variant gap-4">
+				<div>
+					<span class="text-xs font-semibold text-primary uppercase tracking-widest block mb-1">Administración del Blog</span>
+					<h1 class="font-serif text-3xl md:text-4xl font-bold text-on-surface">
+						Panel de Control Culinario
+					</h1>
+				</div>
+				<a href="/recetas" class="btn-secondary text-xs py-2 px-4">
+					<span class="material-symbols-outlined text-sm">open_in_new</span>
+					Ver Sitio Público
+				</a>
+			</div>
+
+			<!-- Metrics Cards -->
+			<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
+				<div class="bg-surface-container rounded-xl p-5 border border-outline-variant flex items-center gap-4">
+					<span class="w-12 h-12 rounded-lg bg-primary-container text-white flex items-center justify-center font-bold">
+						<span class="material-symbols-outlined text-2xl">restaurant_menu</span>
+					</span>
+					<div>
+						<span class="text-2xl font-serif font-bold text-on-surface block">{recipes.length}</span>
+						<span class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Recetas Activas</span>
+					</div>
+				</div>
+
+				<div class="bg-surface-container rounded-xl p-5 border border-outline-variant flex items-center gap-4">
+					<span class="w-12 h-12 rounded-lg bg-secondary-container text-secondary flex items-center justify-center font-bold">
+						<span class="material-symbols-outlined text-2xl">chat</span>
+					</span>
+					<div>
+						<span class="text-2xl font-serif font-bold text-on-surface block">{approvedComments.length}</span>
+						<span class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Comentarios Aprobados</span>
+					</div>
+				</div>
+
+				<div class="bg-surface-container rounded-xl p-5 border border-outline-variant flex items-center gap-4">
+					<span class="w-12 h-12 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+						<span class="material-symbols-outlined text-2xl">rate_review</span>
+					</span>
+					<div>
+						<span class="text-2xl font-serif font-bold text-on-surface block">{pendingComments.length}</span>
+						<span class="text-xs text-on-surface-variant font-medium uppercase tracking-wider">Pendientes de Revisión</span>
+					</div>
+				</div>
+
+				<div class="bg-surface-container rounded-xl p-5 border border-outline-variant flex items-center gap-4">
+					<span class="w-12 h-12 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold">
+						<span class="material-symbols-outlined text-2xl">ads_click</span>
+					</span>
+					<div>
+						<span class="text-xs font-serif font-bold text-on-surface block truncate max-w-[120px]">
+							{settings.adsense_pub_id || "Sin configurar"}
+						</span>
+						<span class="text-[10px] text-on-surface-variant font-medium uppercase tracking-wider">Google AdSense ID</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Dashboard Tabs Header -->
+			<div class="flex border-b border-outline-variant mb-8 overflow-x-auto">
+				<button 
+					id="tab-btn-recipes"
+					class="tab-btn py-3 px-6 text-xs font-bold uppercase tracking-wider border-b-2 border-primary text-primary transition-colors whitespace-nowrap"
+					onclick="switchTab('recipes')"
+				>
+					<span class="material-symbols-outlined text-base inline-block vertical-middle mr-1">menu_book</span>
+					Gestión de Recetas
+				</button>
+				<button 
+					id="tab-btn-comments"
+					class="tab-btn py-3 px-6 text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap"
+					onclick="switchTab('comments')"
+				>
+					<span class="material-symbols-outlined text-base inline-block vertical-middle mr-1">comment</span>
+					Comentarios ({comments.length})
+				</button>
+				<button 
+					id="tab-btn-settings"
+					class="tab-btn py-3 px-6 text-xs font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap"
+					onclick="switchTab('settings')"
+				>
+					<span class="material-symbols-outlined text-base inline-block vertical-middle mr-1">settings</span>
+					Configuración & Google AdSense
+				</button>
+			</div>
+
+			<!-- TAB 1: Recipes Management -->
+			<div id="tab-content-recipes" class="space-y-10">
+				<!-- Add New Recipe Form -->
+				<div class="bg-surface-container rounded-xl p-6 md:p-8 border border-outline-variant shadow-sm">
+					<h3 class="font-serif text-2xl font-bold text-on-surface mb-2 flex items-center gap-2">
+						<span class="material-symbols-outlined text-primary">add_circle</span>
+						Añadir Nueva Receta Española
+					</h3>
+					<p class="text-xs text-on-surface-variant mb-6">Completa el formulario para publicar una nueva receta en el sitio web y guardarla en Cloudflare D1.</p>
+
+					<form id="add-recipe-form" class="space-y-6">
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Título de la Receta *</label>
+								<input 
+									type="text" 
+									name="title" 
+									required 
+									placeholder="Ej. Salmorejo Cordobés con Jamón y Huevo"
+									class="w-full bg-surface text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant focus:border-primary"
+								/>
+							</div>
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Categoría *</label>
+								<select 
+									name="category" 
+									required 
+									class="w-full bg-surface text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant focus:border-primary"
+								>
+									{CATEGORIES.map(c => (
+										<option value={c.id}>{c.name}</option>
+									))}
+								</select>
+							</div>
+						</div>
+
+						<div>
+							<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Descripción Breve *</label>
+							<textarea 
+								name="description" 
+								rows="2" 
+								required 
+								placeholder="Escribe una breve introducción o historia del plato..."
+								class="w-full bg-surface text-xs text-on-surface p-3 rounded border border-outline-variant focus:border-primary"
+							></textarea>
+						</div>
+
+						<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Tiempo Prep</label>
+								<input 
+									type="text" 
+									name="prepTime" 
+									placeholder="Ej. 15 min"
+									class="w-full bg-surface text-xs text-on-surface px-3 py-2 rounded border border-outline-variant"
+								/>
+							</div>
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Tiempo Cocción</label>
+								<input 
+									type="text" 
+									name="cookTime" 
+									placeholder="Ej. 30 min"
+									class="w-full bg-surface text-xs text-on-surface px-3 py-2 rounded border border-outline-variant"
+								/>
+							</div>
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Raciones</label>
+								<input 
+									type="number" 
+									name="servings" 
+									value="4" 
+									class="w-full bg-surface text-xs text-on-surface px-3 py-2 rounded border border-outline-variant"
+								/>
+							</div>
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Dificultad</label>
+								<select name="difficulty" class="w-full bg-surface text-xs text-on-surface px-3 py-2 rounded border border-outline-variant">
+									<option value="Fácil">Fácil</option>
+									<option value="Media">Media</option>
+									<option value="Avanzada">Avanzada</option>
+								</select>
+							</div>
+						</div>
+
+						<div>
+							<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">URL Fotografía Hero *</label>
+							<input 
+								type="url" 
+								name="heroImage" 
+								placeholder="https://images.unsplash.com/photo-..."
+								required
+								class="w-full bg-surface text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant"
+							/>
+						</div>
+
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Ingredientes (un ingrediente por línea) *</label>
+								<textarea 
+									name="ingredients" 
+									rows="6" 
+									required 
+									placeholder="1 kg de tomates pera&#10;100 ml de aceite virgen extra&#10;1 diente de ajo"
+									class="w-full bg-surface text-xs text-on-surface p-3 rounded border border-outline-variant"
+								></textarea>
+							</div>
+							<div>
+								<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Pasos de Elaboración (un paso por línea) *</label>
+								<textarea 
+									name="instructions" 
+									rows="6" 
+									required 
+									placeholder="Paso 1: Lavar los tomates...&#10;Paso 2: Triturar con el pan...&#10;Paso 3: Emulsionar el aceite..."
+									class="w-full bg-surface text-xs text-on-surface p-3 rounded border border-outline-variant"
+								></textarea>
+							</div>
+						</div>
+
+						<div class="flex items-center gap-2">
+							<input type="checkbox" id="featured" name="featured" class="w-4 h-4 text-primary rounded" />
+							<label htmlFor="featured" class="text-xs font-semibold text-on-surface cursor-pointer">
+								Marcar como Receta Destacada en la Portada
+							</label>
+						</div>
+
+						<button type="submit" class="btn-primary py-3 px-8 text-xs font-bold">
+							Guardar y Publicar Receta
+						</button>
+					</form>
+				</div>
+
+				<!-- Existing Recipes List Table -->
+				<div class="bg-surface rounded-xl p-6 border border-outline-variant">
+					<h3 class="font-serif text-xl font-bold text-on-surface mb-4">Catálogo de Recetas Publicadas</h3>
+					<div class="overflow-x-auto">
+						<table class="w-full text-left text-xs border-collapse">
+							<thead>
+								<tr class="border-b border-outline-variant text-on-surface-variant uppercase font-semibold">
+									<th class="py-3 px-2">Título</th>
+									<th class="py-3 px-2">Categoría</th>
+									<th class="py-3 px-2">Dificultad</th>
+									<th class="py-3 px-2">Tiempo</th>
+									<th class="py-3 px-2 text-right">Acciones</th>
+								</tr>
+							</thead>
+							<tbody class="divide-y divide-outline-variant/40">
+								{recipes.map(r => (
+									<tr>
+										<td class="py-3 px-2 font-bold text-on-surface flex items-center gap-2">
+											<img src={r.heroImage} class="w-8 h-8 rounded object-cover" alt="" />
+											<span class="truncate max-w-xs">{r.title}</span>
+										</td>
+										<td class="py-3 px-2 text-on-surface-variant">{r.categoryLabel}</td>
+										<td class="py-3 px-2">{r.difficulty}</td>
+										<td class="py-3 px-2">{r.prepTime}</td>
+										<td class="py-3 px-2 text-right space-x-2">
+											<a href={`/recetas/${r.slug}`} target="_blank" class="text-primary hover:underline font-semibold">Ver</a>
+											<button onclick={`deleteRecipeItem(${r.id})`} class="text-red-700 hover:underline font-semibold">Eliminar</button>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+
+			<!-- TAB 2: Comments Moderation -->
+			<div id="tab-content-comments" class="hidden space-y-8">
+				<div class="bg-surface rounded-xl p-6 border border-outline-variant">
+					<h3 class="font-serif text-2xl font-bold text-on-surface mb-2">Moderación de Comentarios de Usuarios</h3>
+					<p class="text-xs text-on-surface-variant mb-6">Revisa y gestiona las opiniones recibidas en las recetas.</p>
+
+					{comments.length === 0 ? (
+						<p class="text-xs text-on-surface-variant italic">No hay comentarios registrados.</p>
+					) : (
+						<div class="overflow-x-auto">
+							<table class="w-full text-left text-xs border-collapse">
+								<thead>
+									<tr class="border-b border-outline-variant text-on-surface-variant uppercase font-semibold">
+										<th class="py-3 px-2">Autor</th>
+										<th class="py-3 px-2">Receta Slug</th>
+										<th class="py-3 px-2">Valoración</th>
+										<th class="py-3 px-2">Comentario</th>
+										<th class="py-3 px-2">Estado</th>
+										<th class="py-3 px-2 text-right">Acciones</th>
+									</tr>
+								</thead>
+								<tbody class="divide-y divide-outline-variant/40">
+									{comments.map(c => (
+										<tr>
+											<td class="py-3 px-2 font-bold text-on-surface">{c.authorName}<br/><span class="text-[10px] text-on-surface-variant font-normal">{c.authorEmail}</span></td>
+											<td class="py-3 px-2 text-on-surface-variant font-mono text-[11px]">{c.recipeSlug}</td>
+											<td class="py-3 px-2 text-amber-600 font-bold">{c.rating} ★</td>
+											<td class="py-3 px-2 text-on-surface-variant max-w-xs truncate">{c.content}</td>
+											<td class="py-3 px-2">
+												<span class={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${c.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+													{c.status}
+												</span>
+											</td>
+											<td class="py-3 px-2 text-right space-x-2">
+												{c.status === 'pending' && (
+													<button onclick={`approveCommentItem(${c.id})`} class="text-emerald-700 hover:underline font-semibold">Aprobar</button>
+												)}
+												<button onclick={`deleteCommentItem(${c.id})`} class="text-red-700 hover:underline font-semibold">Eliminar</button>
+											</td>
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					)}
+				</div>
+			</div>
+
+			<!-- TAB 3: Site & Google AdSense Settings -->
+			<div id="tab-content-settings" class="hidden space-y-8">
+				<div class="bg-surface-container rounded-xl p-6 md:p-8 border border-outline-variant max-w-2xl">
+					<h3 class="font-serif text-2xl font-bold text-on-surface mb-2 flex items-center gap-2">
+						<span class="material-symbols-outlined text-primary">ads_click</span>
+						Configuración del Sitio & Google AdSense
+					</h3>
+					<p class="text-xs text-on-surface-variant mb-6">Actualiza el título principal del sitio y el ID de editor de Google AdSense.</p>
+
+					<form id="settings-form" class="space-y-4">
+						<div>
+							<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Título del Sitio Web</label>
+							<input 
+								type="text" 
+								name="site_title" 
+								value={settings.site_title || ''} 
+								class="w-full bg-surface text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant"
+							/>
+						</div>
+
+						<div>
+							<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Descripción SEO del Sitio</label>
+							<textarea 
+								name="site_description" 
+								rows="3"
+								class="w-full bg-surface text-xs text-on-surface p-3 rounded border border-outline-variant"
+							>{settings.site_description || ''}</textarea>
+						</div>
+
+						<div>
+							<label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Google AdSense Publisher ID (ca-pub-XXXXXXXXXX)</label>
+							<input 
+								type="text" 
+								name="adsense_pub_id" 
+								value={settings.adsense_pub_id || ''} 
+								placeholder="ca-pub-1234567890123456"
+								class="w-full bg-surface text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant font-mono"
+							/>
+						</div>
+
+						<button type="submit" class="btn-primary py-3 px-8 text-xs font-bold">
+							Guardar Cambios de Configuración
+						</button>
+					</form>
+				</div>
+			</div>
+		</main>
+
+		<Footer />
+
+		<script is:inline>
+			function switchTab(tabName) {
+				const tabs = ['recipes', 'comments', 'settings'];
+				tabs.forEach(t => {
+					const btn = document.getElementById(`tab-btn-${t}`);
+					const content = document.getElementById(`tab-content-${t}`);
+					if (btn && content) {
+						if (t === tabName) {
+							btn.classList.add('border-b-2', 'border-primary', 'text-primary');
+							btn.classList.remove('text-on-surface-variant');
+							content.classList.remove('hidden');
+						} else {
+							btn.classList.remove('border-b-2', 'border-primary', 'text-primary');
+							btn.classList.add('text-on-surface-variant');
+							content.classList.add('hidden');
+						}
+					}
+				});
+			}
+
+			// Add Recipe Submission
+			const recipeForm = document.getElementById('add-recipe-form');
+			if (recipeForm) {
+				recipeForm.addEventListener('submit', async (e) => {
+					e.preventDefault();
+					const formData = new FormData(recipeForm);
+					const data = {
+						title: formData.get('title'),
+						category: formData.get('category'),
+						description: formData.get('description'),
+						prepTime: formData.get('prepTime'),
+						cookTime: formData.get('cookTime'),
+						servings: formData.get('servings'),
+						difficulty: formData.get('difficulty'),
+						heroImage: formData.get('heroImage'),
+						ingredients: formData.get('ingredients'),
+						instructions: formData.get('instructions'),
+						featured: formData.get('featured') === 'on'
+					};
+
+					try {
+						const res = await fetch('/api/recipes', {
+							method: 'POST',
+							headers: { 'Content-Type': 'application/json' },
+							body: JSON.stringify(data)
+						});
+						if (res.ok) {
+							alert('¡Receta añadida con éxito!');
+							window.location.reload();
+						} else {
+							alert('Error al añadir receta.');
+						}
+					} catch(err) {
+						console.error(err);
+					}
+				});
+			}
+
+			// Delete Recipe
+			async function deleteRecipeItem(id) {
+				if (!confirm('¿Estás seguro de eliminar esta receta?')) return;
+				const res = await fetch(`/api/recipes?id=${id}`, { method: 'DELETE' });
+				if (res.ok) window.location.reload();
+			}
+
+			// Approve Comment
+			async function approveCommentItem(id) {
+				const res = await fetch('/api/comments', {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ id, status: 'approved' })
+				});
+				if (res.ok) window.location.reload();
+			}
+
+			// Delete Comment
+			async function deleteCommentItem(id) {
+				if (!confirm('¿Eliminar este comentario?')) return;
+				const res = await fetch(`/api/comments?id=${id}`, { method: 'DELETE' });
+				if (res.ok) window.location.reload();
+			}
+
+			// Settings Submission
+			const settingsForm = document.getElementById('settings-form');
+			if (settingsForm) {
+				settingsForm.addEventListener('submit', async (e) => {
+					e.preventDefault();
+					const formData = new FormData(settingsForm);
+					const data = {
+						site_title: formData.get('site_title'),
+						site_description: formData.get('site_description'),
+						adsense_pub_id: formData.get('adsense_pub_id')
+					};
+					const res = await fetch('/api/settings', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(data)
+					});
+					if (res.ok) {
+						alert('Configuración guardada correctamente.');
+						window.location.reload();
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

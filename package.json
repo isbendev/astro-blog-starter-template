@@ -27,13 +27,13 @@
 	},
 	"private": true,
 	"scripts": {
-		"astro": "astro",
-		"build": "astro build",
-		"cf-typegen": "wrangler types",
-		"check": "astro build && tsc && wrangler deploy --dry-run",
-		"deploy": "wrangler deploy",
-		"dev": "astro dev",
-		"preview": "astro build && wrangler dev"
+		"astro": "node ./node_modules/astro/astro.js",
+		"build": "node ./node_modules/astro/astro.js build",
+		"cf-typegen": "npx wrangler types",
+		"check": "node ./node_modules/astro/astro.js build && npx tsc",
+		"deploy": "npx wrangler deploy",
+		"dev": "node ./node_modules/astro/astro.js dev",
+		"preview": "node ./node_modules/astro/astro.js build && npx wrangler dev"
 	},
 	"type": "module"
 }

@@ -1,62 +1,77 @@
 ---
-import Layout from '../layouts/BlogPost.astro';
+import BaseHead from '../components/BaseHead.astro';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { SITE_BRAND, SITE_AUTHOR } from '../consts';
+
+export const prerender = true;
 ---
 
-<Layout
-	title="About Me"
-	description="Lorem ipsum dolor sit amet"
-	pubDate={new Date('August 08 2021')}
-	heroImage="/blog-placeholder-about.jpg"
->
-	<p>
-		Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut
-		labore et dolore magna aliqua. Vitae ultricies leo integer malesuada nunc vel risus commodo
-		viverra. Adipiscing enim eu turpis egestas pretium. Euismod elementum nisi quis eleifend quam
-		adipiscing. In hac habitasse platea dictumst vestibulum. Sagittis purus sit amet volutpat. Netus
-		et malesuada fames ac turpis egestas. Eget magna fermentum iaculis eu non diam phasellus
-		vestibulum lorem. Varius sit amet mattis vulputate enim. Habitasse platea dictumst quisque
-		sagittis. Integer quis auctor elit sed vulputate mi. Dictumst quisque sagittis purus sit amet.
-	</p>
+<!DOCTYPE html>
+<html lang="es">
+	<head>
+		<BaseHead 
+			title={`Sobre Mí | ${SITE_BRAND}`} 
+			description="Conoce la historia detrás de Sabor y Sazón: pasión por la cocina tradicional de nuestras abuelas." 
+		/>
+	</head>
+	<body class="bg-surface text-on-surface">
+		<Header />
+		
+		<main class="max-w-[1120px] mx-auto px-4 md:px-10 py-12">
+			<!-- Hero About Section -->
+			<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center mb-16">
+				<div class="lg:col-span-5 relative">
+					<div class="aspect-[4/5] rounded-2xl overflow-hidden shadow-xl border border-outline-variant relative">
+						<img 
+							src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=800&q=80" 
+							alt={SITE_AUTHOR}
+							class="w-full h-full object-cover"
+						/>
+					</div>
+					<div class="absolute -bottom-6 -right-6 bg-primary text-white p-6 rounded-xl shadow-lg hidden sm:block max-w-xs">
+						<p class="font-serif text-lg font-bold leading-tight">"La cocina es el lenguaje del alma de un pueblo."</p>
+						<span class="text-xs text-amber-200 mt-2 block font-sans uppercase font-semibold">— {SITE_AUTHOR}</span>
+					</div>
+				</div>
 
-	<p>
-		Morbi tristique senectus et netus. Id semper risus in hendrerit gravida rutrum quisque non
-		tellus. Habitasse platea dictumst quisque sagittis purus sit amet. Tellus molestie nunc non
-		blandit massa. Cursus vitae congue mauris rhoncus. Accumsan tortor posuere ac ut. Fringilla urna
-		porttitor rhoncus dolor. Elit ullamcorper dignissim cras tincidunt lobortis. In cursus turpis
-		massa tincidunt dui ut ornare lectus. Integer feugiat scelerisque varius morbi enim nunc.
-		Bibendum neque egestas congue quisque egestas diam. Cras ornare arcu dui vivamus arcu felis
-		bibendum. Dignissim suspendisse in est ante in nibh mauris. Sed tempus urna et pharetra pharetra
-		massa massa ultricies mi.
-	</p>
+				<div class="lg:col-span-7">
+					<span class="text-xs font-semibold text-primary uppercase tracking-widest block mb-2">Pasión por la Gastronomía</span>
+					<h1 class="font-serif text-4xl md:text-5xl font-bold text-on-surface mb-6">
+						Hola, soy Carmen Velasco
+					</h1>
+					<p class="text-sm md:text-base text-on-surface-variant leading-relaxed mb-6">
+						Bienvenido a <strong>{SITE_BRAND}</strong>. Nací en un pequeño pueblo cerca de las sierras andaluzas, donde aprendí a cocinar al calor de los fogones de leña observando a mi abuela y a mi madre.
+					</p>
+					<p class="text-sm md:text-base text-on-surface-variant leading-relaxed mb-6">
+						Para mí, la cocina española es mucho más que recetas: es reunión familiar, sobremesas eternas, el aroma a sofrito de ajo y tomate recién hecho, y el crepitar de la paella en un domingo de sol.
+					</p>
 
-	<p>
-		Mollis nunc sed id semper risus in. Convallis a cras semper auctor neque. Diam sit amet nisl
-		suscipit. Lacus viverra vitae congue eu consequat ac felis donec. Egestas integer eget aliquet
-		nibh praesent tristique magna sit amet. Eget magna fermentum iaculis eu non diam. In vitae
-		turpis massa sed elementum. Tristique et egestas quis ipsum suspendisse ultrices. Eget lorem
-		dolor sed viverra ipsum. Vel turpis nunc eget lorem dolor sed viverra. Posuere ac ut consequat
-		semper viverra nam. Laoreet suspendisse interdum consectetur libero id faucibus. Diam phasellus
-		vestibulum lorem sed risus ultricies tristique. Rhoncus dolor purus non enim praesent elementum
-		facilisis. Ultrices tincidunt arcu non sodales neque. Tempus egestas sed sed risus pretium quam
-		vulputate. Viverra suspendisse potenti nullam ac tortor vitae purus faucibus ornare. Fringilla
-		urna porttitor rhoncus dolor purus non. Amet dictum sit amet justo donec enim.
-	</p>
+					<div class="grid grid-cols-2 gap-6 pt-4 border-t border-outline-variant">
+						<div>
+							<span class="font-serif text-3xl font-bold text-primary block">+15 Años</span>
+							<span class="text-xs text-on-surface-variant uppercase font-semibold">Entre fogones y cazuelas</span>
+						</div>
+						<div>
+							<span class="font-serif text-3xl font-bold text-secondary block">100% Auténtico</span>
+							<span class="text-xs text-on-surface-variant uppercase font-semibold">Ingredientes de mercado</span>
+						</div>
+					</div>
+				</div>
+			</div>
 
-	<p>
-		Mattis ullamcorper velit sed ullamcorper morbi tincidunt. Tortor posuere ac ut consequat semper
-		viverra. Tellus mauris a diam maecenas sed enim ut sem viverra. Venenatis urna cursus eget nunc
-		scelerisque viverra mauris in. Arcu ac tortor dignissim convallis aenean et tortor at. Curabitur
-		gravida arcu ac tortor dignissim convallis aenean et tortor. Egestas tellus rutrum tellus
-		pellentesque eu. Fusce ut placerat orci nulla pellentesque dignissim enim sit amet. Ut enim
-		blandit volutpat maecenas volutpat blandit aliquam etiam. Id donec ultrices tincidunt arcu. Id
-		cursus metus aliquam eleifend mi.
-	</p>
+			<!-- Philosophy Banner -->
+			<div class="bg-surface-container-high rounded-2xl p-8 md:p-12 border border-outline-variant text-center max-w-3xl mx-auto my-12">
+				<h2 class="font-serif text-3xl font-bold text-on-surface mb-4">Nuestra Filosofía Culinaria</h2>
+				<p class="text-xs md:text-sm text-on-surface-variant leading-relaxed mb-6">
+					Reivindicamos la cocina lenta ("Slow Food"), el respeto absoluto por el producto de temporada y la transmisión de los secretos gastronómicos tradicionales sin artificios innecesarios.
+				</p>
+				<a href="/recetas" class="btn-primary py-3 px-8 text-xs font-bold">
+					Descubre las Recetas
+				</a>
+			</div>
+		</main>
 
-	<p>
-		Tempus quam pellentesque nec nam aliquam sem. Risus at ultrices mi tempus imperdiet. Id porta
-		nibh venenatis cras sed felis eget velit. Ipsum a arcu cursus vitae. Facilisis magna etiam
-		tempor orci eu lobortis elementum. Tincidunt dui ut ornare lectus sit. Quisque non tellus orci
-		ac. Blandit libero volutpat sed cras. Nec tincidunt praesent semper feugiat nibh sed pulvinar
-		proin gravida. Egestas integer eget aliquet nibh praesent tristique magna.
-	</p>
-</Layout>
+		<Footer />
+	</body>
+</html>

@@ -1,0 +1,159 @@
+---
+import type { Comment } from "../lib/recipes-data";
+
+interface Props {
+  recipeSlug: string;
+  comments: Comment[];
+}
+
+const { recipeSlug, comments } = Astro.props;
+---
+
+<div class="mt-16 bg-surface-container rounded-xl p-6 md:p-10 border border-outline-variant">
+  <div class="flex items-center justify-between border-b border-outline-variant pb-4 mb-8">
+    <div>
+      <span class="text-xs font-semibold text-primary uppercase tracking-widest">Opiniones & Consejos</span>
+      <h3 class="font-serif text-2xl font-bold text-on-surface">Comentarios de Cocineros ({comments.length})</h3>
+    </div>
+    <div class="flex items-center gap-1 text-amber-600">
+      <span class="material-symbols-outlined fill-1">star</span>
+      <span class="font-bold text-sm">
+        {comments.length > 0 ? (comments.reduce((acc, c) => acc + c.rating, 0) / comments.length).toFixed(1) : "5.0"}
+      </span>
+    </div>
+  </div>
+
+  <!-- Comments List -->
+  {comments.length === 0 ? (
+    <p class="text-sm text-on-surface-variant italic mb-8">¡Sé el primero en dejar un comentario o variante para esta receta!</p>
+  ) : (
+    <div class="space-y-6 mb-12">
+      {comments.map((comment) => (
+        <div class="bg-surface rounded-lg p-5 border border-outline-variant/60 shadow-sm">
+          <div class="flex justify-between items-start mb-2">
+            <div>
+              <span class="font-serif font-bold text-on-surface text-base">{comment.authorName}</span>
+              <span class="text-[11px] text-on-surface-variant block">{comment.createdAt}</span>
+            </div>
+            <div class="flex text-amber-500">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span class={`material-symbols-outlined text-sm ${i < comment.rating ? 'fill-1 text-amber-500' : 'text-gray-300'}`}>
+                  star
+                </span>
+              ))}
+            </div>
+          </div>
+          <p class="text-xs md:text-sm text-on-surface-variant leading-relaxed">{comment.content}</p>
+        </div>
+      ))}
+    </div>
+  )}
+
+  <!-- Add Comment Form -->
+  <div class="bg-surface rounded-lg p-6 border border-outline-variant">
+    <h4 class="font-serif text-lg font-bold text-on-surface mb-2">¿Has preparado este plato? Deja tu valoración</h4>
+    <p class="text-xs text-on-surface-variant mb-6">Comparte tus impresiones, modificaciones o consejos con la comunidad.</p>
+
+    <form id="comment-form" data-slug={recipeSlug} class="space-y-4">
+      <input type="hidden" name="recipeSlug" value={recipeSlug} />
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Tu Nombre</label>
+          <input 
+            type="text" 
+            name="authorName" 
+            required 
+            placeholder="Ej. María García"
+            class="w-full bg-surface-container text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant focus:outline-none focus:border-primary"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Tu Email (no se publicará)</label>
+          <input 
+            type="email" 
+            name="authorEmail" 
+            required 
+            placeholder="maria@ejemplo.com"
+            class="w-full bg-surface-container text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant focus:outline-none focus:border-primary"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Valoración</label>
+        <select 
+          name="rating" 
+          class="w-full md:w-48 bg-surface-container text-xs text-on-surface px-3 py-2.5 rounded border border-outline-variant focus:outline-none focus:border-primary"
+        >
+          <option value="5">⭐⭐⭐⭐⭐ 5 estrellas (Excelente)</option>
+          <option value="4">⭐⭐⭐⭐ 4 estrellas (Muy buena)</option>
+          <option value="3">⭐⭐⭐ 3 estrellas (Buena)</option>
+          <option value="2">⭐⭐ 2 estrellas (Regular)</option>
+          <option value="1">⭐ 1 estrella (Mejorable)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold uppercase text-on-surface-variant mb-1">Comentario / Opinión</label>
+        <textarea 
+          name="content" 
+          rows="3" 
+          required 
+          placeholder="Cuéntanos cómo te quedó, qué acompañamiento usaste o tus dudas..."
+          class="w-full bg-surface-container text-xs text-on-surface p-3 rounded border border-outline-variant focus:outline-none focus:border-primary"
+        ></textarea>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <button type="submit" class="btn-primary py-2.5 px-6 text-xs">
+          Publicar Comentario
+        </button>
+        <span id="comment-status" class="text-xs font-semibold text-secondary hidden">
+          ✓ Comentario enviado correctamente.
+        </span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script is:inline>
+  const form = document.getElementById('comment-form');
+  const statusEl = document.getElementById('comment-status');
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const data = {
+        recipeSlug: formData.get('recipeSlug'),
+        authorName: formData.get('authorName'),
+        authorEmail: formData.get('authorEmail'),
+        rating: Number(formData.get('rating')),
+        content: formData.get('content')
+      };
+
+      try {
+        const res = await fetch('/api/comments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          if (statusEl) {
+            statusEl.classList.remove('hidden');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1200);
+          }
+        } else {
+          alert('Hubo un error al guardar el comentario. Inténtalo de nuevo.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error de conexión.');
+      }
+    });
+  }
+</script>

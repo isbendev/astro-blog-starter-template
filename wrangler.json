@@ -12,7 +12,7 @@
 		{
 			"binding": "DB",
 			"database_name": "recetas-db",
-			"database_id": "local-recetas-db"
+			"database_id": "d7e4fc96-b958-437c-a405-a0769d82f147"
 		}
 	],
 	"observability": {
